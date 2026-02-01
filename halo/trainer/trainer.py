@@ -10,8 +10,6 @@ from accelerate import Accelerator, DistributedType
 import torch
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from parallel.ulysses_attn import prepare_ulysses_attn_inputs
-
 
 class LMTrainer:
     def __init__(
@@ -138,31 +136,6 @@ class LMTrainer:
         input_ids: Tensor = inputs['input_ids']
         labels: Tensor = inputs['labels']
         position_ids: Tensor = inputs['position_ids']
-
-        if self.args.data_name == 'modelbest':
-            if not bool(self.args.use_cu_seqlens):
-                batch_size, sequence_length = input_ids.shape
-
-                # 创建 position_ids, 换成全部能看见的情况
-                position_ids = torch.arange(sequence_length).unsqueeze(0).expand(batch_size, -1)
-            if not bool(self.args.use_cp):
-                labels = input_ids.clone()
-
-        # if bool(self.args.use_cp):
-        #     # Goal: each process gets input_ids with shape [bsz, seqlen / ngpus].
-        #     # The i-th process gets the i-th chunk.
-        #     local_inputs = prepare_ulysses_attn_inputs(
-        #         input_ids=input_ids,
-        #         position_ids=position_ids,
-        #         labels=labels,
-        #         rank=self.accelerator.process_index,
-        #         world_size=self.accelerator.num_processes,
-        #         device=self.accelerator.device,
-        #     )
-
-        #     input_ids: Tensor = local_inputs['input_ids']  # type: ignore
-        #     labels: Tensor = local_inputs['labels']  # type: ignore
-        #     position_ids: Tensor = local_inputs['position_ids']  # type: ignore
 
         input_ids = input_ids.to(self.accelerator.device)
         labels = labels.to(self.accelerator.device)
@@ -409,32 +382,9 @@ class LMTrainer:
 
         # Wrap the model with accelerator classes
         self.accelerator.print("Wrapping the model with accelerator classes...")
-        # orig_loader = self.train_loader
-        # self.model, self.optimizer, self.lr_scheduler, wrapped_train_loader = self.accelerator.prepare(
-        #     self.model, self.optimizer, self.lr_scheduler, self.train_loader)
-        # if bool(self.args.use_cp):
-        #     self.train_loader = orig_loader
-        # else:
-        #     self.train_loader = wrapped_train_loader
 
         self.model, self.optimizer, self.lr_scheduler, self.train_loader = self.accelerator.prepare(
             self.model, self.optimizer, self.lr_scheduler, self.train_loader)
-
-        if bool(self.args.use_cp):
-            # Wrap the train loader to simulate CP with DP.
-            from parallel import ulysses_attn
-            sp_group = ulysses_attn.get_sequence_data_parallel_group()
-            sp_world_size = ulysses_attn.get_sequence_data_parallel_world_size()
-            sp_rank = ulysses_attn.get_sequence_data_parallel_rank()
-            self.accelerator.print(">>>>>>>> SP info:")
-            self.accelerator.print(f"SP rank: {sp_rank}, SP world size: {sp_world_size}, SP group: {sp_group}")
-            self.train_loader = ulysses_attn.UlyssesSPDataLoaderAdapter(
-                self.train_loader,
-                sp_rank=sp_rank,
-                sp_world_size=sp_world_size,
-                sp_group=sp_group,
-                device=self.accelerator.device,
-            )
 
         self.train_loop()
         self.end_training()

@@ -7,12 +7,10 @@ import torch
 from accelerate import Accelerator
 from torch import nn, Tensor
 from torch.utils.data import DataLoader
-# from accelerate import DeepSpeedPlugin
 from accelerate import DistributedDataParallelKwargs
 from accelerate.utils import DataLoaderConfiguration
 from torch.optim import AdamW
 from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmup
-# from data.modelbest_sdk import ModelBestSDKDatasetBuilder
 from optim.lr_scheduler import WSDScheduler
 
 from arguments import Args
@@ -48,11 +46,6 @@ def get_accelerator(args: Args, find_unused_parameters: bool = False) -> Acceler
         use_stateful_dataloader=False,
     )
 
-    # ds_plugin = DeepSpeedPlugin(
-    #     gradient_accumulation_steps=args.grad_accum_steps,
-    #     hf_ds_config="configs/accelerate/zero3_config.json",
-    # )
-
     project_dir = f"./results/{args.proj_name}"
     log_with = args.report_to.split(",")
     accelerator = Accelerator(
@@ -66,9 +59,7 @@ def get_accelerator(args: Args, find_unused_parameters: bool = False) -> Acceler
         # the warmup steps should be scaled by
         # num_processes * gradient_accumulation).
         step_scheduler_with_optimizer=False,
-        # dataloader_config=dataloader_config,
         kwargs_handlers=[ddp_kwargs] if find_unused_parameters else [],
-        # deepspeed_plugin=ds_plugin,
     )
     accelerator.print(f"Project directory: {project_dir}")
     accelerator.print(f"Reporting to: {log_with}")
@@ -117,34 +108,6 @@ def cu_seqlens_collate_fn(
     }
 
 
-class ModelBestArgs:
-    def __init__(
-        self,
-        data_path=None,
-        train_data_path=None,
-        valid_data_path=None,
-        test_data_path=None,
-        micro_batch_size=32,
-        seq_length=512,
-        use_fixed_length_segment=False,
-        no_load_data_state=False,
-        ckpt_step=None,
-        load=None,
-        clear_sampler_state=False,
-    ):
-        self.data_path = data_path
-        self.train_data_path = train_data_path
-        self.valid_data_path = valid_data_path
-        self.test_data_path = test_data_path
-        self.micro_batch_size = micro_batch_size
-        self.seq_length = seq_length
-        self.use_fixed_length_segment = use_fixed_length_segment
-        self.no_load_data_state = no_load_data_state
-        self.ckpt_step = ckpt_step
-        self.load = load
-        self.clear_sampler_state = clear_sampler_state
-
-
 def get_dataloaders(
     args: Args, tok_path: str, accelerator: Accelerator
 ) -> Tuple[DataLoader, DataLoader | None]:
@@ -152,69 +115,9 @@ def get_dataloaders(
     assert args.data_path is not None
     assert args.max_len is not None
     assert args.batch_size is not None
-    if args.use_ulysses_attn is not None and bool(args.use_ulysses_attn):
-        assert not args.shift_labels_in_model
 
-    if args.data_name == "modelbest":
-        # TODO: Should move this to `data/__init__.py`.
-        from modelbest_sdk.dataset.thrift_wrapper.dataset_context import DatasetContext
-
-        modelbest_args = ModelBestArgs(
-            # data_path=["0.5","/home/wangshuo/wangshuo04/project/data/c4_dedup","0.5","/home/wangshuo/wangshuo04/project/linear_attention/zyx_infra/data"], #args.data_path,
-            data_path=[item.strip() for item in args.mb_sdk_data_list.split(",")],
-            # data_path=["1.0","/home/wangshuo/wangshuo04/project/linear_attention/zyx_infra/data"], #args.data_path,
-            # train_data_path='path/to/train_data',
-            # valid_data_path='path/to/valid_data',
-            # test_data_path='path/to/test_data',
-            micro_batch_size=args.batch_size,
-            seq_length=args.max_len,
-            use_fixed_length_segment=True,
-            no_load_data_state=True,
-            ckpt_step=args.save_interval,
-            # load='path/to/checkpoints',
-            clear_sampler_state=True,
-        )
-        print(f"modelbest_args = {vars(modelbest_args)}")
-        config = DatasetContext(
-            # rank=mpu.get_data_parallel_rank(),
-            # world_size=mpu.get_data_parallel_world_size(),
-            # tp_rank=mpu.get_tensor_model_parallel_rank(),
-            # tp_size=mpu.get_tensor_model_parallel_world_size(),
-            # pp_rank=mpu.get_pipeline_model_parallel_rank(),
-            # pp_size=mpu.get_pipeline_model_parallel_world_size(),
-            # num_workers=args.num_workers,
-            dataset_config_path="",
-            # dataset_checkpoint_path=args.save,
-            # Use a fixed seed that doesn't depend on parallel configuration
-            # to ensure same data sampling across different context parallel sizes
-            # seed=args.seed if hasattr(args, 'seed') and args.seed is not None else 1234,
-            # seed = mpu.get_data_parallel_world_size() + mpu.get_data_parallel_rank(),
-        )
-        train_ds, valid_dataloader, test_dataloader = ModelBestSDKDatasetBuilder(
-            config
-        ).build(modelbest_args)
-        # train_loader = DataLoader(
-        #     train_ds,  # type: ignore
-        #     batch_size=args.batch_size,
-        #     pin_memory=True,
-        #     num_workers=1 if args.data_n_workers is None else args.data_n_workers,
-        #     collate_fn=None,
-        # )
-        return train_ds.dataloader, None
-
-    if bool(args.use_cp):
-        assert not bool(args.shift_labels_in_model)
-        shift_labels_in_dataset = False
-        dp_size = accelerator.num_processes // args.sp_size
-        # We want each GPU to see ctx_len = max_len / sp_size.
-        # But, we need to pass sp_size * dp_size to
-        # UlyssesSPDataLoaderAdapter, so the max_len need to be multiplied
-        # by dp_size. Otherwise, the sequence length observed by each SP
-        # rank will be shorter.
-        max_len = args.max_len * dp_size
-    else:
-        shift_labels_in_dataset = not bool(args.shift_labels_in_model)
-        max_len = args.max_len
+    shift_labels_in_dataset = not bool(args.shift_labels_in_model)
+    max_len = args.max_len
 
     train_ds = get_data(
         tokenizer_name=tok_path,
@@ -239,7 +142,6 @@ def get_dataloaders(
         num_workers=1 if args.data_n_workers is None else args.data_n_workers,
         collate_fn=collate_fn,
     )
-
 
     if args.validation_data_path is not None and args.validation_data_name is not None:
         val_ds = get_data(
@@ -314,12 +216,6 @@ def prepare_optimizers(model: nn.Module, args: Args, accelerator: Accelerator):
     frozen_params = {n: p for n, p in model.named_parameters() if not p.requires_grad}
     accelerator.print(f"Trainable parameters: {len(trainable_params)}")
     accelerator.print(f"Trainable parameters: {list(trainable_params.keys())}")
-    # if not model.student_model.config.train_mlp:
-    #     rm_names = [n for n, p in trainable_params.items() if '.mlp.' in n]
-    #     for n in rm_names:
-    #         del trainable_params[n]
-    # accelerator.print(f"Trainable parameters: {len(trainable_params)}")
-    # accelerator.print(f"Trainable parameters: {list(trainable_params.keys())}")
 
     param_groups = [
         {

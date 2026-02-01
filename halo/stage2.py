@@ -69,7 +69,6 @@ def main():
         teacher_model,
         student_model,
         loss_fn=args.loss_fn,
-        # train_mlp=student_model.config.train_mlp,
     )
     n_student_params = sum(p.numel() for p in student_model.parameters())
     n_teacher_params = sum(p.numel() for p in teacher_model.parameters())
@@ -86,7 +85,6 @@ def main():
 
     if accelerator.is_main_process:
         # save model config
-        # model_config: PretrainedConfig = model.config  # type: ignore
         student_config_path = output_dir / "student_config.json"
         student_model.config.to_json_file(student_config_path)
         teacher_config_path = output_dir / "teacher_config.json"
@@ -99,7 +97,6 @@ def main():
     if bool(args.compile):
         assert args.device != "mps", "torch.compile not supported on MPS"
         accelerator.print("compiling the model... (takes a ~minute)")
-        # unoptimized_model = model
         model = torch.compile(model)  # requires PyTorch 2.0  # type: ignore
 
     accelerator.print("Preparing dataloaders...")

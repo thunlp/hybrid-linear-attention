@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from .modeling_qwen3 import Qwen3Attention, Qwen3ForCausalLM
+from .modeling_qwen3 import Qwen3Attention
 from transformers.generation.utils import GenerationMixin
 
 
@@ -124,29 +124,4 @@ class HiddenStateAligner(nn.Module, GenerationMixin):
         student_hidden_states = torch.stack([aligner.student_hidden_states for aligner in aligners], dim=0)
         loss = self.get_loss(teacher_hidden_states, student_hidden_states)
 
-        # for i in range(len(teacher_hidden_states)):
-        #     mean_t = teacher_hidden_states[i].mean().item()
-        #     std_t = teacher_hidden_states[i].std().item()
-        #     min_t = teacher_hidden_states[i].min().item()
-        #     max_t = teacher_hidden_states[i].max().item()
-        #     mean_s = student_hidden_states[i].mean().item()
-        #     std_s = student_hidden_states[i].std().item()
-        #     min_s = student_hidden_states[i].min().item()
-        #     max_s = student_hidden_states[i].max().item()
-        #     print(f'teacher {i} mean: {mean_t:.4e}\tstd: {std_t:.4e}\tmin: {min_t:.4e}\tmax: {max_t:.4e}')
-        #     print(f'student {i} mean: {mean_s:.4e}\tstd: {std_s:.4e}\tmin: {min_s:.4e}\tmax: {max_s:.4e}')
-        # print('teacher has nan:', torch.isnan(teacher_hidden_states).any())
-        # print('student has nan:', torch.isnan(student_hidden_states).any())
-        # print('alignment loss:', alignment_loss.item())
-        # print('max diff:', (teacher_hidden_states - student_hidden_states).abs().max())
-        # print('teacher max:', (teacher_hidden_states).abs().max())
-        # print('student max:', (student_hidden_states).abs().max())
-
         return loss
-
-
-if __name__ == "__main__":
-    from transformers import Qwen3ForCausalLM
-
-    model = Qwen3ForCausalLM.from_pretrained("Qwen/Qwen3-4B")
-    gdn = init_gdn_with_attn(model.model.layers[0].self_attn, 0)

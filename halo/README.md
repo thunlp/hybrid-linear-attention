@@ -27,6 +27,8 @@ The training consists of the following steps:
 
 The following sections show an example of how to run this code for converting a Qwen3-1.7B checkpoint into HypeNet using the HALO training procedure.
 
+> By default, the training log will be saved with Tensorboard and Swanlab. If you want to use Wandb (or other experiment trackers that HuggingFace Accelerate supports), you should set the `--report_to` argument in the following scripts.
+
 **Step 0: Setup**
 
 Please do the following to prepare for distillation.

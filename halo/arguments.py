@@ -91,11 +91,6 @@ class Args(Tap):
     profile_mem: int = 0
     activation_offloading: int | None = None
 
-    # Parallelism
-    use_ulysses_attn: int | None = None
-    use_cp: int | None = None
-    sp_size: int | None = None
-
     dtype: str | None = None
     """
     float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler.

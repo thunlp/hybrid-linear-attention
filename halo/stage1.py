@@ -21,7 +21,6 @@ from preparation import get_args, get_accelerator, get_dataloaders, prepare_opti
 
 
 def main():
-    # torch.set_float32_matmul_precision('high')  # wtf is this?
     torch.set_default_dtype(torch.bfloat16)
     args: Args = get_args()
     load_train_config(args)
@@ -111,13 +110,6 @@ def main():
             orig_model.model.config.lightning_rope_scaling = student_config.lightning_rope_scaling
             orig_model.model.config.lightning_head_dim = student_config.lightning_head_dim
             orig_model.model.config.lightning_use_rope = student_config.lightning_use_rope
-
-            # if student_config.lightning_head_dim is not None:
-            #     # Change the head dim of RoPE to match lightning attn's head dim.
-            #     orig_model.model.config.lightning_head_dim = student_config.lightning_head_dim
-            # else:
-            #     orig_model.model.config.lightning_head_dim = orig_model.model.config.head_dim
-            # orig_model.model.config.lightning_head_dim = orig_model.model.config.head_dim
             orig_model.model._init_rope()
 
         accelerator.print(orig_model)
@@ -149,14 +141,6 @@ def main():
     accelerator.print(tokenizer.decode(outputs[0], skip_special_tokens=True))
     accelerator.print('=' * 100)
     orig_model.config.use_cache = False
-    # orig_model.gradient_checkpointing_enable()
-
-    # accelerator.print(model.model.model.layers[0].self_attn.student_layer.q_proj.weight)
-    # accelerator.print(model.model.model.layers[0].self_attn.teacher_layer.q_proj.weight)
-    # accelerator.print(model.model.model.layers[0].self_attn.student_layer.q_norm.weight)
-    # accelerator.print(model.model.model.layers[0].self_attn.teacher_layer.q_norm.weight)
-    # accelerator.print(model.model.model.layers[0].self_attn.student_layer.o_proj.weight)
-    # accelerator.print(model.model.model.layers[0].self_attn.teacher_layer.o_proj.weight)
 
     accelerator.print("================ model ================")
     accelerator.print(model)
@@ -178,13 +162,6 @@ def main():
 
     accelerator.print("Preparing optimizers...")
     optimizer, lr_scheduler = prepare_optimizers(model=model, args=args, accelerator=accelerator)
-
-    # # Compile with PyTorch 2.0, very powerful
-    # if bool(args.compile):
-    #     assert args.device != "mps", "torch.compile not supported on MPS"
-    #     accelerator.print("compiling the model... (takes a ~minute)")
-    #     # unoptimized_model = model
-    #     model = torch.compile(model)  # requires PyTorch 2.0  # type: ignore
 
     accelerator.print("Preparing dataloaders...")
     train_loader, val_loader = get_dataloaders(

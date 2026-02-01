@@ -54,13 +54,11 @@ def build_hybrid_from_ckpt(args: Args, accelerator: Accelerator, checkpoint_path
     accelerator.print("======== Config ==========")
     accelerator.print(config)
     accelerator.print("==========================")
-    # config.mixer_types = ['gdn'] * config.num_hidden_layers
     accelerator.print(f"Instantiating HybridForCausalLM...")
     # Must be BF16 for FSDP.
     model = HypeNetForCausalLM(config=config).to(torch.bfloat16)  # type: ignore
 
     accelerator.print(f"Loading state dict from {ckpt_path}...")
-    # state_dict = load_file(ckpt_path / 'model.safetensors')
     state_dict = load_state_dict(ckpt_path)
     new_state_dict = {}
     for key, val in state_dict.items():
@@ -70,8 +68,6 @@ def build_hybrid_from_ckpt(args: Args, accelerator: Accelerator, checkpoint_path
             continue
         key = key.replace('student_model.', '')
         key = key.replace('.embeddings.', '.embed_tokens.')
-        # key = key.replace('.attn_norm.', '.mixer_norm.')
-        # key = key.replace('.attn.', '.mixer.')
         new_state_dict[key] = val
 
     accelerator.print("Tying word embeddings...")

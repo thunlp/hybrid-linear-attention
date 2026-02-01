@@ -78,7 +78,6 @@ def main():
 
     if accelerator.is_main_process:
         # save model config
-        # model_config: PretrainedConfig = model.config  # type: ignore
         config_path = output_dir / "config.json"
         accelerator.print(f"Saving model config to {config_path}")
         model.config.to_json_file(config_path)
@@ -94,7 +93,6 @@ def main():
     if bool(args.compile):
         assert args.device != "mps", "torch.compile not supported on MPS"
         accelerator.print("compiling the model... (takes a ~minute)")
-        # unoptimized_model = model
         model = torch.compile(model)  # requires PyTorch 2.0  # type: ignore
 
     accelerator.print("Preparing dataloaders...")
