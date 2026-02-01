@@ -4,11 +4,11 @@ from pathlib import Path
 from accelerate import Accelerator
 from accelerate.utils import set_seed
 import torch
-from modeling.tfm2rnn.modeling_hybrid import HypeNetForCausalLM
+from modeling.hypenet.modeling_hypenet import HypeNetForCausalLM
 from transformers import AutoTokenizer
 
 from arguments import Args
-from modeling.tfm2rnn.distillation_model import DistillationModel, build_hybrid_from_ckpt
+from modeling.hypenet.distillation_model import DistillationModel, build_hybrid_from_ckpt
 from trainer.trainer import LMTrainer
 from preparation import get_args, get_accelerator, get_dataloaders, prepare_optimizers, load_train_config
 from utils import print_trainable_parameters

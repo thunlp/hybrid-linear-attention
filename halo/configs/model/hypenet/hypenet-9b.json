@@ -1,6 +1,6 @@
 {
     "architectures": [
-      "HybridForCausalLM"
+      "HypeNetForCausalLM"
     ],
     "attention_bias": false,
     "attention_dropout": 0.0,
@@ -65,7 +65,7 @@
       "attn",
       "lightning-attn"
     ],
-    "model_type": "hybrid",
+    "model_type": "hypenet",
     "num_attention_heads": 32,
     "num_hidden_layers": 36,
     "num_key_value_heads": 8,

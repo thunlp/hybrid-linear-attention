@@ -17,7 +17,7 @@ from cut_cross_entropy import linear_cross_entropy
 from transformers.modeling_utils import PreTrainedModel
 from transformers.processing_utils import Unpack
 from transformers.utils import auto_docstring, can_return_tuple, logging, is_torch_flex_attn_available
-from .configuration_hybrid import HybridConfig
+from .configuration_hypenet import HypeNetConfig
 from .modeling_qwen3 import Qwen3RMSNorm, Qwen3Attention, Qwen3MLP, Qwen3RotaryEmbedding
 from .gdn import GatedDeltaNet
 from .lightning_attn import LightningAttention
@@ -34,7 +34,7 @@ logger = logging.get_logger(__name__)
 
 
 class HypeNetDecoderLayer(nn.Module):
-    def __init__(self, config: HybridConfig, layer_idx: int):
+    def __init__(self, config: HypeNetConfig, layer_idx: int):
         super().__init__()
         self.config = config
         self.hidden_size = config.hidden_size
@@ -156,10 +156,10 @@ class HypeNetDecoderLayer(nn.Module):
 
 # @auto_docstring
 class HypeNetPreTrainedModel(PreTrainedModel):
-    config_class = HybridConfig
+    config_class = HypeNetConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["HybridDecoderLayer"]
+    _no_split_modules = ["HypeNetDecoderLayer"]
     _skip_keys_device_placement = ["past_key_values"]
     _supports_flash_attn_2 = True
     _supports_sdpa = True
@@ -184,7 +184,7 @@ class HypeNetPreTrainedModel(PreTrainedModel):
 
 
 class HypeNetModel(HypeNetPreTrainedModel):
-    def __init__(self, config: HybridConfig):
+    def __init__(self, config: HypeNetConfig):
         super().__init__(config)
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
@@ -406,7 +406,7 @@ class HypeNetModel(HypeNetPreTrainedModel):
         dtype: torch.dtype,
         cache_position: torch.Tensor,
         batch_size: int,
-        config: HybridConfig,
+        config: HypeNetConfig,
         past_key_values: Cache,
     ):
         """
@@ -426,7 +426,7 @@ class HypeNetModel(HypeNetPreTrainedModel):
                 Indices depicting the position of the input sequence tokens in the sequence.
             batch_size (`torch.Tensor`):
                 Batch size.
-            config (`HybridConfig`):
+            config (`HypeNetConfig`):
                 The model's configuration class
             past_key_values (`Cache`):
                 The cache class that is being used currently to generate
@@ -477,7 +477,7 @@ class HypeNetForCausalLM(HypeNetPreTrainedModel, GenerationMixin):
     _tp_plan = {"lm_head": "colwise_rep"}
     _pp_plan = {"lm_head": (["hidden_states"], ["logits"])}
 
-    def __init__(self, config: HybridConfig):
+    def __init__(self, config: HypeNetConfig):
         super().__init__(config)
         self.model = HypeNetModel(config)
         self.vocab_size = config.vocab_size
@@ -523,28 +523,6 @@ class HypeNetForCausalLM(HypeNetPreTrainedModel, GenerationMixin):
         return_logits: bool = False,
         **kwargs: Unpack[KwargsForCausalLM],
     ) -> CausalLMOutputWithPast:
-        r"""
-        labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
-            Labels for computing the masked language modeling loss. Indices should either be in `[0, ...,
-            config.vocab_size]` or -100 (see `input_ids` docstring). Tokens with indices set to `-100` are ignored
-            (masked), the loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`.
-
-        Example:
-
-        ```python
-        >>> from transformers import AutoTokenizer, HybridForCausalLM
-
-        >>> model = HybridForCausalLM.from_pretrained("Qwen/Hybrid-8B")
-        >>> tokenizer = AutoTokenizer.from_pretrained("Qwen/Hybrid-8B")
-
-        >>> prompt = "Hey, are you conscious? Can you talk to me?"
-        >>> inputs = tokenizer(prompt, return_tensors="pt")
-
-        >>> # Generate
-        >>> generate_ids = model.generate(inputs.input_ids, max_length=30)
-        >>> tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-        "Hey, are you conscious? Can you talk to me?\nI'm not conscious, but I can talk to you."
-        ```"""
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states

@@ -1,5 +1,5 @@
 import torch
-from modeling.tfm2rnn import HypeNetForCausalLM, HybridConfig
+from modeling.hypenet import HypeNetForCausalLM, HypeNetConfig
 from transformers import AutoTokenizer
 from torch import Tensor
 from pathlib import Path
@@ -45,9 +45,9 @@ class Args(Tap):
     only_state_dict: int = 0
     stage: int = 3
     tok_path = '/path/to/qwen3-1.7b'
-    ckpt_path = "/home/test/test07/chenyingfa/tfm2rnn/tiny-pretrainer/results/hypenet/e7_stage3_hypenet-1.7b-gdn-attn-eq0_stage3_"
-    config_path = "configs/model/hypenet/hypenet-1.7b-gdn-attn-eq0.json"
-    out_path = "ckpts/hypenet-1.7b-gdn-attn-eq0_stage3"
+    ckpt_path = "results/hypenet/e1_stage3_hypenet-2b_stage3_"
+    config_path = "configs/model/hypenet/hypenet-2b.json"
+    out_path = "ckpts/hypenet-2b_stage3"
     ckpt = "ckpt_500"
 
 
@@ -64,7 +64,7 @@ assert tok_path.exists(), f"Tokenizer {tok_path} does not exist"
 print(f"Loading tokenizer from {tok_path}")
 tokenizer = AutoTokenizer.from_pretrained(tok_path)
 print(f"Loading config from {config_path}")
-config = HybridConfig.from_json_file(config_path)
+config = HypeNetConfig.from_json_file(config_path)
 
 print(config)
 

@@ -4,8 +4,8 @@ from accelerate.utils import set_seed
 import torch
 from transformers import AutoModelForCausalLM
 
-from modeling.tfm2rnn import HypeNetForCausalLM, HybridConfig
-from modeling.tfm2rnn import build_hybrid_from_ckpt
+from modeling.hypenet import HypeNetForCausalLM, HypeNetConfig
+from modeling.hypenet import build_hybrid_from_ckpt
 from trainer.trainer import LMTrainer
 from preparation import (
     get_args,
@@ -49,13 +49,13 @@ def main():
 
     if args.init_method == 'build_from_stage2':
         model = build_hybrid_from_ckpt(args, accelerator, args.init_from)
-    elif args.init_method == 'HybridForCausalLM.from_pretrained':
+    elif args.init_method == 'HypeNetForCausalLM.from_pretrained':
         assert args.init_from is not None
         model = HypeNetForCausalLM.from_pretrained(args.init_from)
     elif args.init_method == 'state_dict':
         assert args.model_config is not None
         assert args.init_from is not None
-        config = HybridConfig.from_json_file(Path(args.model_config))
+        config = HypeNetConfig.from_json_file(Path(args.model_config))
         model = HypeNetForCausalLM(config=config)
         print("Loading state dict")
         state_dict = torch.load(args.init_from)

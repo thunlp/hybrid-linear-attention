@@ -34,7 +34,7 @@ class Args(Tap):
     init_from: str = 'scratch'  # 'scratch' or 'resume' or 'gpt2*'
 
     report_to: str = "tensorboard,swanlab"
-    proj_name: str = "tfm2rnn"
+    proj_name: str = "hypenet"
     run_name: str = "test"
     '''The code will append str(time.time()) to the run name.'''
 

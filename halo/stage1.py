@@ -1,22 +1,21 @@
 from pathlib import Path
 from functools import partial
-from copy import deepcopy
 
 from accelerate.utils import set_seed
 import torch
 from transformers import AutoTokenizer
 
 from arguments import Args
-from modeling.tfm2rnn.hidden_state_aligner import (
+from modeling.hypenet.hidden_state_aligner import (
     HiddenStateAligner,
 )
-from modeling.tfm2rnn.lightning_attn import (
+from modeling.hypenet.lightning_attn import (
     build_lightning_attn_with_attn,
 )
-from modeling.tfm2rnn.kda import build_kda_with_attn
-from modeling.tfm2rnn.gdn import build_gdn_with_attn
-from modeling.tfm2rnn.modeling_hybrid import HypeNetForCausalLM
-from modeling.tfm2rnn.configuration_hybrid import HybridConfig
+from modeling.hypenet.kda import build_kda_with_attn
+from modeling.hypenet.gdn import build_gdn_with_attn
+from modeling.hypenet.modeling_hypenet import HypeNetForCausalLM
+from modeling.hypenet.configuration_hypenet import HypeNetConfig
 from trainer.trainer import LMTrainer
 from preparation import get_args, get_accelerator, get_dataloaders, prepare_optimizers, load_train_config
 
@@ -24,7 +23,7 @@ from preparation import get_args, get_accelerator, get_dataloaders, prepare_opti
 def main():
     # torch.set_float32_matmul_precision('high')  # wtf is this?
     torch.set_default_dtype(torch.bfloat16)
-    args = get_args()
+    args: Args = get_args()
     load_train_config(args)
     set_seed(args.seed)
     accelerator = get_accelerator(args)
@@ -57,7 +56,7 @@ def main():
 
     if args.model_name in ["LA", "lightning-attn"]:
         # Build student config from orig config.
-        student_config = HybridConfig.from_json_file(args.model_config)
+        student_config = HypeNetConfig.from_json_file(args.model_config)
         layer_init_fn = partial(
             build_lightning_attn_with_attn,
             config=student_config,
@@ -66,7 +65,7 @@ def main():
         accelerator.print(student_config)
         accelerator.print("=======================")
     elif args.model_name in ["kda"]:
-        student_config = HybridConfig.from_json_file(args.model_config)
+        student_config = HypeNetConfig.from_json_file(args.model_config)
         layer_init_fn = partial(
             build_kda_with_attn,
             config=student_config,
@@ -75,7 +74,7 @@ def main():
         accelerator.print(student_config)
         accelerator.print("=======================")
     elif args.model_name in ["gdn"]:
-        student_config = HybridConfig.from_json_file(args.model_config)
+        student_config = HypeNetConfig.from_json_file(args.model_config)
         layer_init_fn = partial(
             build_gdn_with_attn,
             config=student_config,

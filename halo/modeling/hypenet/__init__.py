@@ -1,6 +1,3 @@
-"""
-Tfm2rnn package initialization
-""" 
 from pathlib import Path
 import json
 
@@ -9,9 +6,8 @@ from torch import nn, Tensor
 from safetensors.torch import load_file
 from accelerate import Accelerator
 
-from .modeling_hybrid import HypeNetForCausalLM
-from .configuration_hybrid import HybridConfig
-# from transformers.modeling_utils import load_sharded_checkpoint
+from .modeling_hypenet import HypeNetForCausalLM
+from .configuration_hypenet import HypeNetConfig
 from arguments import Args
 
 
@@ -54,7 +50,7 @@ def build_hybrid_from_ckpt(args: Args, accelerator: Accelerator, checkpoint_path
     student_config_path = ckpt_path.parent / 'student_config.json'
     accelerator.print(f'Loading student config from {student_config_path}...')
 
-    config = HybridConfig.from_json_file(student_config_path)
+    config = HypeNetConfig.from_json_file(student_config_path)
     accelerator.print("======== Config ==========")
     accelerator.print(config)
     accelerator.print("==========================")
@@ -94,7 +90,7 @@ def get_model(args: Args, config_path: str | None = None) -> nn.Module:
     if args.init_from not in ['scratch', 'none', '']:
         model = HypeNetForCausalLM.from_pretrained(args.init_from)
     elif config_path is not None:
-        config = HybridConfig.from_json_file(config_path)
+        config = HypeNetConfig.from_json_file(config_path)
         model = HypeNetForCausalLM(config=config)
     else:
         raise ValueError("Either `args.init_from` or `config_path` must be provided.")

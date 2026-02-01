@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from fla.ops.simple_gla import chunk_simple_gla
 from fla.ops.simple_gla.fused_recurrent import fused_recurrent_simple_gla
 from .modeling_qwen3 import Qwen3RMSNorm
-from .configuration_hybrid import HybridConfig
+from .configuration_hypenet import HypeNetConfig
 from .modeling_qwen3 import apply_rotary_pos_emb
 from .cache import HybridCache
 from fla.modules import ShortConvolution
@@ -298,7 +298,7 @@ class LightningAttention(nn.Module):
 
 def build_lightning_attn_with_attn(
     attn_layer: nn.Module,
-    config: HybridConfig,
+    config: HypeNetConfig,
     layer_idx: int,
 ) -> nn.Module:
 

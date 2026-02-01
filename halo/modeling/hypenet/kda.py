@@ -10,7 +10,7 @@ try:
     from fla.utils import tensor_cache
 except ImportError:
     raise ImportError("Plese run `pip install -U fla-core`")
-from .configuration_hybrid import HybridConfig
+from .configuration_hypenet import HypeNetConfig
 from .cache import HybridCache
 from .modeling_qwen3 import Qwen3RMSNorm, apply_rotary_pos_emb
 
@@ -94,7 +94,7 @@ def pad_input(
 
 
 class KimiDeltaAttention(nn.Module):
-    def __init__(self, config: HybridConfig, layer_idx: int):
+    def __init__(self, config: HypeNetConfig, layer_idx: int):
         super().__init__()
         self.config = config
         self.mode = "chunk"
@@ -296,7 +296,7 @@ class KimiDeltaAttention(nn.Module):
 
 def build_kda_with_attn(
     attn_layer: nn.Module,
-    config: HybridConfig,
+    config: HypeNetConfig,
     layer_idx: int,
 ) -> nn.Module:
 
