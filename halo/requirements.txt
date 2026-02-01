@@ -1,0 +1,16 @@
+numpy
+datasets
+tensorboardX
+swanlab
+torch
+typed-argument-parser
+accelerate
+transformers
+deepspeed
+einops
+cut_entropy_loss
+triton
+jsonlines
+torchdata>=0.8.0
+flash-linear-attention
+flash_attn

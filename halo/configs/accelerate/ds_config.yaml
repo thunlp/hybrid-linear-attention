@@ -1,0 +1,42 @@
+compute_environment: LOCAL_MACHINE
+distributed_type: DEEPSPEED
+mixed_precision: bf16
+num_processes: 16
+num_machines: 2
+main_process_ip: null
+main_process_port: null
+
+deepspeed_config:
+  bf16: true
+  gradient_clipping: auto
+  # train_batch_size: 8
+  train_micro_batch_size_per_gpu: 1
+  gradient_accumulation_steps: 1
+  # contiguous_gradients: true
+
+  zero_stage: 3
+  zero3_init_flag: true
+  zero3_save_16bit_model: true
+
+  # Shard everything aggressively
+  offload_optimizer_device: cpu
+  offload_param_device: none
+
+  # Reduce temporary memory spikes
+  zero_config:
+    contiguous_gradients: true
+    overlap_comm: true
+    reduce_scatter: true
+    stage3_max_live_parameters: 1e7      # ~200 MB bf16 per gather
+    stage3_max_reuse_distance: 1e7
+    stage3_prefetch_bucket_size: 1e7       # disable prefetch to avoid early all-gather
+    stage3_param_persistence_threshold: 1e7  # never keep params resident
+    stage3_gather_16bit_weights_on_model_save: true
+
+  # Activation memory savings
+  activation_checkpointing:
+    partition_activations: true
+    contiguous_memory_optimization: true
+    cpu_checkpointing: true
+
+fsdp_config: {}
