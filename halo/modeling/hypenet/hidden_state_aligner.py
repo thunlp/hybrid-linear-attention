@@ -67,7 +67,7 @@ class HiddenStateAligner(nn.Module, GenerationMixin):
         self,
         model: nn.Module,
         layer_init_fn: Callable,
-        loss_fn: str = 'l2norm',  # l2norm, mse
+        loss_fn: str = 'mse',  # l2norm, mse
         convert_layer_idxs: Optional[list[int]] = None,
     ):
         super().__init__()

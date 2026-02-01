@@ -61,9 +61,6 @@ class HypeNetConfig(PretrainedConfig):
         rope_theta=10000.0,
         rope_scaling=None,
         attention_bias=False,
-        use_sliding_window=False,
-        sliding_window=4096,
-        max_window_layers=28,
         attention_dropout=0.0,
         _attn_implementation: str = 'flash_attention_2',
         # Gated DeltaNet
@@ -118,9 +115,6 @@ class HypeNetConfig(PretrainedConfig):
         self.intermediate_size = intermediate_size
         self.num_hidden_layers = num_hidden_layers
         self.num_attention_heads = num_attention_heads
-        self.use_sliding_window = use_sliding_window
-        self.sliding_window = sliding_window  # we check `use_sliding_window` in the modeling code
-        self.max_window_layers = max_window_layers
         self.mixer_types = mixer_types
         if len(self.mixer_types) == 0:
             # The default config is Qwen3 (full attn in every layer)
@@ -138,6 +132,10 @@ class HypeNetConfig(PretrainedConfig):
         if head_dim is None:
             head_dim = self.hidden_size // self.num_attention_heads
 
+        self.attn_use_rope = attn_use_rope
+        self.attn_logits_scaling = attn_logits_scaling
+        self.attn_use_output_gate = attn_use_output_gate
+
         # For Lightning Attention
         self.head_dim = head_dim
         self.lightning_use_qk_norm = lightning_use_qk_norm
@@ -152,11 +150,6 @@ class HypeNetConfig(PretrainedConfig):
         self.lightning_nkv = lightning_nkv if lightning_nkv is not None else self.num_key_value_heads
         self.lightning_head_dim = lightning_head_dim if lightning_head_dim is not None else self.head_dim
         self.lightning_scale = lightning_scale
-        self.attn_use_rope = attn_use_rope
-        self.fused_ce_loss = fused_ce_loss
-        self.shift_labels = shift_labels
-        self.attn_logits_scaling = attn_logits_scaling
-        self.attn_use_output_gate = attn_use_output_gate
         
         # Kimi Delta Attention
         self.kda_head_dim = kda_head_dim if kda_head_dim is not None else self.head_dim
@@ -166,6 +159,10 @@ class HypeNetConfig(PretrainedConfig):
         self.kda_use_rope = kda_use_rope
 
         # Others
+        self.loss_fn = loss_fn
+        self.rand_init = rand_init
+        self.fused_ce_loss = fused_ce_loss
+        self.shift_labels = shift_labels
         self.hidden_act = hidden_act
         self.initializer_range = initializer_range
         self.rms_norm_eps = rms_norm_eps
@@ -191,10 +188,6 @@ class HypeNetConfig(PretrainedConfig):
         self.gdn_nkv = gdn_nkv if gdn_nkv is not None else self.num_key_value_heads
         self.gdn_use_qk_norm = gdn_use_qk_norm
         self.gdn_use_rope = gdn_use_rope
-
-        # Other
-        self.loss_fn = loss_fn
-        self.rand_init = rand_init
 
         super().__init__(
             tie_word_embeddings=tie_word_embeddings,
