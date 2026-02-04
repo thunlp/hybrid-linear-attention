@@ -32,15 +32,15 @@ Specifically, this directory handles:
 
 ## Setup
 
-1. **Install dependencies**
+1. **Install dependencies**:
 ```bash
 pip install -r ../halo/requirements.txt
 
 ```
 
 
-2. **Install lm-evaluation-harness** Follow the official installation guide: [https://github.com/EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness)
-3. **Complete Stage 1 of HALO** Attention layer selection requires the **RNN checkpoint produced in Stage 1**. Ensure your Stage 1 RNN checkpoint is ready before proceeding.
+2. **Install lm-evaluation-harness**: Follow the official installation guide: [https://github.com/EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness)
+3. **Complete Stage 1 of HALO**: Attention layer selection requires the **RNN checkpoint produced in Stage 1**. Ensure your Stage 1 RNN checkpoint is ready before proceeding.
 
 ---
 
@@ -78,9 +78,8 @@ This script:
 
 * Performs a **layer-wise sweep** across all attention layers.
 * Stores results in the following structure:
-* `{RESULTS_BASE_DIR}/{MODEL_TYPE}/layer{L}/` for each individual layer.
-* `{RESULTS_BASE_DIR}/original/` for the baseline (original) model.
-
+  * `{RESULTS_BASE_DIR}/{MODEL_TYPE}/layer{L}/` for each individual layer.
+  * `{RESULTS_BASE_DIR}/original/` for the baseline (original) model.
 
 
 ---
