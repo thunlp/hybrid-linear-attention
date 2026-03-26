@@ -53,8 +53,6 @@ bash scripts/stage1_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/path
 
 This step is optional, you can also simply reuse the attention layer selection results (which is specified in the config's `mixer_type` field). The implementation for the selection method is located in the `attn-layer-selection` directory.
 
-The selection method is implemented in a separate codebase. Please refer to `attn-layer-selection` to reproduce our experiments in this part.
-
 **Step 2: Run stage 2 of HALO**
 
 This step performs end-to-end distillation from Qwen3 to the hybrid model using KL divergence.
