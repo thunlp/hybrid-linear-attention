@@ -17,7 +17,7 @@ comment=${comment:-""}
 tok_path=${tok_path:-"/path/to/qwen3-8b"}
 
 stage2_ckpt=${stage2_ckpt:-"ckpt_20000"}
-stage2_run_name=${stage2_run_name:-"${exp_group}_stage2_${model_config}_stage2_"}
+stage2_run_name=${stage2_run_name:-"${exp_group}_stage2_${model_config}_stage2-9b_"}
 path_stage2=${path_stage2:-"results/${proj_name}/${stage2_run_name}/${stage2_ckpt}"}
 
 run_name="${exp_group}_stage3_${model_config}_${train_config}_${comment}"
