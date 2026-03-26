@@ -37,17 +37,21 @@ Please do the following to prepare for distillation.
 2. Download Qwen3-1.7B checkpoint from: <https://huggingface.co/Qwen/Qwen3-1.7B>
 3. Download the FineWeb-Edu data from: <https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu>
 
+> If you want to use Swanlab for experiment tracking, you can simply set the SWANLAB_API_KEY and this code will automatically send metrics to Swanlab.
+
 **Step 1: Run Stage 1 of HALO**
 
 This step starts by transferring the weights from Qwen3 to a hybrid model, then aligns the hidden states (outputs of token mixing layers) between Qwen3 and the hybrid model.
 
 ```bash
-bash ./scripts/stage1_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/path/to/fineweb-edu-100bt
+bash scripts/stage1_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/path/to/fineweb-edu-100bt
 ```
 
 **Step 1.5 (optional): Attention Layer Selection**
 
 > Unless you want to modify the attention layer selection method, you can directly use the attention layer indices we have pre-computed and defined in the model configs (i.e., the `mixer_type` field in `configs/model/hypenet/hypenet-2b.json` for example), and do not need to rerun the attenion layer selection experiments.
+
+This step is optional, you can also simply reuse the attention layer selection results (which is specified in the config's `mixer_type` field). The implementation for the selection method is located in the `attn-layer-selection` directory.
 
 The selection method is implemented in a separate codebase. Please refer to `attn-layer-selection` to reproduce our experiments in this part.
 
@@ -56,7 +60,7 @@ The selection method is implemented in a separate codebase. Please refer to `att
 This step performs end-to-end distillation from Qwen3 to the hybrid model using KL divergence.
 
 ```bash
-bash ./scripts/stage2_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/path/to/fineweb-edu-100bt
+bash scripts/stage2_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/path/to/fineweb-edu-100bt
 ```
 
 **Step 3: Run stage 3 of HALO**
@@ -64,7 +68,7 @@ bash ./scripts/stage2_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/pa
 This step finetunes the distilled model on using longer training contexts without distillation (no teacher model).
 
 ```bash
-bash ./scripts/stage3_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/path/to/fineweb-edu-100bt
+bash scripts/stage3_hypenet_2b.sh orig_model=/path/to/qwen3-1.7b data_path=/path/to/fineweb-edu-100bt
 ```
 
 ### Step 4: Extract the checkpoint into HuggingFace format
@@ -77,6 +81,30 @@ python build_hf_ckpt.py \
 --ckpt=ckpt_500 \
 --stage=3 \
 --out_path=ckpts/hypenet-2b
+```
+
+### Step 5: Activate Attention Logits Scaling
+
+As explained in Section 5.1 in the paper (specifically, Equation 11), during inference, we scale the attention logits with a position-dependent factor $s_t$. To achieve this, simply change the `attn_logits_scaling` entry in the final checkpoint's `config.json` file to `"hype <value>"` where `<value>` is the $\alpha$ in Equation 11, and the recommended values can be found in Table 6 in the paper. For example, for the HypeNet-2B model, you should apply the following change in this step:
+
+Before: 
+
+```json
+{
+    ...
+    "attn_logits_scaling": null,
+    ...
+}
+```
+
+After: 
+
+```json
+{
+    ...
+    "attn_logits_scaling": "hype 500",
+    ...
+}
 ```
 
 ### Notes for Converting the 8B Model

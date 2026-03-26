@@ -135,6 +135,8 @@ class HypeNetConfig(PretrainedConfig):
         self.attn_use_rope = attn_use_rope
         self.attn_logits_scaling = attn_logits_scaling
         self.attn_use_output_gate = attn_use_output_gate
+        self.use_sliding_window = False
+        self.sliding_window = None
 
         # For Lightning Attention
         self.head_dim = head_dim
