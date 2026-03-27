@@ -22,7 +22,7 @@ from .modeling_qwen3 import Qwen3RMSNorm, Qwen3Attention, Qwen3MLP, Qwen3RotaryE
 from .gdn import GatedDeltaNet
 from .lightning_attn import LightningAttention
 from .cache import HybridCache
-from .kda import KimiDeltaAttention
+# from .kda import KimiDeltaAttention
 
 if is_torch_flex_attn_available():
     from torch.nn.attention.flex_attention import BlockMask
