@@ -63,23 +63,6 @@ class HypeNetConfig(PretrainedConfig):
         attention_bias=False,
         attention_dropout=0.0,
         _attn_implementation: str = 'flash_attention_2',
-        # Gated DeltaNet
-        gdn_use_short_conv: bool = False,
-        gdn_use_gate: bool = False,
-        gdn_expand_v: int = 1,
-        gdn_attn_mode: str = 'chunk',
-        gdn_fuse_cross_entropy: bool = False,
-        gdn_activation: str | None = None,
-        gdn_nh: int | None = None,
-        gdn_nkv: int | None = None,
-        gdn_use_qk_norm: bool = False,
-        gdn_use_rope: bool = False,
-        # Mamba2
-        mamba2_n_groups: int = 1,
-        mamba2_expand_ratio: float = 1.0,
-        mamba2_conv_kernel: int = 4,
-        mamba2_bias: bool = False,
-        mamba2_hidden_act: str | None = None,
         # Lightning attention
         lightning_use_qk_norm: bool = False,
         lightning_use_output_gate: bool = False,
@@ -92,12 +75,6 @@ class HypeNetConfig(PretrainedConfig):
         lightning_scale: str = '1/sqrt(d)',
         lightning_use_short_conv: bool = False,
         lightning_conv_size: int = 4,
-        # Kimi Delta Attention
-        kda_head_dim: int | None = None,
-        kda_num_heads: int | None = None,
-        kda_use_conv: bool = False,
-        kda_use_qk_norm: bool = True,
-        kda_use_rope: bool = False,
         # Other
         expand_kv_proj: bool = False,
         loss_fn: str = 'kl_div',
@@ -150,13 +127,6 @@ class HypeNetConfig(PretrainedConfig):
         self.lightning_nkv = lightning_nkv if lightning_nkv is not None else self.num_key_value_heads
         self.lightning_head_dim = lightning_head_dim if lightning_head_dim is not None else self.head_dim
         self.lightning_scale = lightning_scale
-        
-        # Kimi Delta Attention
-        self.kda_head_dim = kda_head_dim if kda_head_dim is not None else self.head_dim
-        self.kda_num_heads = kda_num_heads if kda_num_heads is not None else self.num_attention_heads
-        self.kda_use_conv = kda_use_conv
-        self.kda_use_qk_norm = kda_use_qk_norm
-        self.kda_use_rope = kda_use_rope
 
         # Others
         self.loss_fn = loss_fn
@@ -176,18 +146,6 @@ class HypeNetConfig(PretrainedConfig):
         if self.rope_scaling is not None and "type" in self.rope_scaling:
             self.rope_scaling["rope_type"] = self.rope_scaling["type"]
         rope_config_validation(self)
-
-        # Gated DeltaNet (GDN)
-        self.gdn_use_short_conv = gdn_use_short_conv
-        self.gdn_use_gate = gdn_use_gate
-        self.gdn_expand_v = gdn_expand_v
-        self.gdn_attn_mode = gdn_attn_mode
-        self.gdn_fuse_cross_entropy = gdn_fuse_cross_entropy
-        self.gdn_activation = gdn_activation
-        self.gdn_nh = gdn_nh if gdn_nh is not None else self.num_attention_heads
-        self.gdn_nkv = gdn_nkv if gdn_nkv is not None else self.num_key_value_heads
-        self.gdn_use_qk_norm = gdn_use_qk_norm
-        self.gdn_use_rope = gdn_use_rope
 
         super().__init__(
             tie_word_embeddings=tie_word_embeddings,

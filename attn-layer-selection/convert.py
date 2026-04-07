@@ -160,7 +160,7 @@ def main(
     # ------------------------------------------------------------------
     # RNN-only model
     # ------------------------------------------------------------------
-    rnn_config = HypeNetConfig.from_json_file(rnn_base_path)
+    rnn_config = HypeNetConfig.from_json_file(base_config_path)
     rnn_config.mixer_types = [rnn_type] * rnn_config.num_hidden_layers
 
     rnn_only_model = HypeNetForCausalLM(rnn_config)

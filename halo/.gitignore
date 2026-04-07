@@ -21,3 +21,4 @@ accel_logs/
 deepspeed_logs/
 results/
 ckpts/
+ckpts_backup/

@@ -19,10 +19,8 @@ from transformers.processing_utils import Unpack
 from transformers.utils import auto_docstring, can_return_tuple, logging, is_torch_flex_attn_available
 from .configuration_hypenet import HypeNetConfig
 from .modeling_qwen3 import Qwen3RMSNorm, Qwen3Attention, Qwen3MLP, Qwen3RotaryEmbedding
-from .gdn import GatedDeltaNet
 from .lightning_attn import LightningAttention
 from .cache import HybridCache
-from .kda import KimiDeltaAttention
 
 if is_torch_flex_attn_available():
     from torch.nn.attention.flex_attention import BlockMask
@@ -46,21 +44,6 @@ class HypeNetDecoderLayer(nn.Module):
                 config=config,
                 layer_idx=layer_idx,
             )
-        elif mixer_type == 'gdn':
-            self.self_attn = GatedDeltaNet(
-                layer_idx=layer_idx,
-                hidden_size=config.hidden_size,
-                expand_v=config.gdn_expand_v,
-                num_heads=config.gdn_nh,
-                num_kv_heads=config.gdn_nkv,
-                key_dim=config.head_dim,
-                val_dim=config.head_dim,
-                use_gate=config.gdn_use_gate,
-                use_short_conv=config.gdn_use_short_conv,
-                activation=config.gdn_activation,
-                qk_norm=config.gdn_use_qk_norm,
-                use_rope=config.gdn_use_rope,
-            )
         elif mixer_type in ['lightning-attn', 'lightning_attn']:
             # raise NotImplementedError("LightningAttention is not implemented")
             self.self_attn = LightningAttention(
@@ -80,14 +63,6 @@ class HypeNetDecoderLayer(nn.Module):
                 use_short_conv=config.lightning_use_short_conv,
                 conv_size=config.lightning_conv_size,
             )
-        elif mixer_type == 'kda':
-            self.self_attn = KimiDeltaAttention(config=config, layer_idx=layer_idx)
-        elif mixer_type == 'gla':
-            raise NotImplementedError("GatedLightningAttention is not implemented")
-        elif mixer_type == 'rwkv7':
-            raise NotImplementedError("RWKV7Attention is not implemented")
-        elif mixer_type == 'mamba2':
-            raise NotImplementedError("Mamba2 is not implemented")
         else:
             raise ValueError(f"Invalid mixer type: {mixer_type}")
         self.mlp = Qwen3MLP(config)
@@ -123,10 +98,6 @@ class HypeNetDecoderLayer(nn.Module):
         if self.mixer_type == "attn" and not self.config.attn_use_rope:
             position_embeddings = None
         elif self.mixer_type == "lightning-attn" and not self.config.lightning_use_rope:
-            position_embeddings = None
-        elif self.mixer_type == "kda" and not self.config.kda_use_rope:
-            position_embeddings = None
-        elif self.mixer_type == "gdn" and not self.config.gdn_use_rope:
             position_embeddings = None
 
         # TODO: Also handle other kinds of token mixers
