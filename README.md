@@ -2,6 +2,11 @@
 
 Code and models for the paper: [Hybrid Linear Attention Done Right: Efficient Distillation and Effective Architectures for Extremely Long Contexts](https://arxiv.org/abs/2601.22156) by Yingfa Chen, Zhen Leng Thai, Zihan Zhou, Zhu Zhang, Xingyu Shen, Shuo Wang, Chaojun Xiao, Xu Han, and Zhiyuan Liu.
 
+Links:
+
+- Models: <https://huggingface.co/collections/chen-yingfa/hypenet>
+- Paper: <https://arxiv.org/pdf/2601.22156>
+
 The main contributions of the paper is:
 
 - 🔥 **Superior performance-efficiency tradeoff**: Compared to homogenous Transformer models such as Qwen3.
