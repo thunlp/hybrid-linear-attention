@@ -61,8 +61,9 @@ class DistillationModel(nn.Module):
                 0.0, device=flat_student_logits.device, dtype=flat_student_logits.dtype
             )
             chunk_len = 512
-            n_chunks = (flat_student_logits.shape[0] + chunk_len - 1) // chunk_len
-            for i in range(0, n_chunks, chunk_len):
+            seqlen = flat_student_logits.shape[0]
+            # n_chunks = (flat_student_logits.shape[0] + chunk_len - 1) // chunk_len
+            for i in range(0, seqlen, chunk_len):
                 distill_loss += F.kl_div(
                     log_prob_student[i : i + chunk_len],
                     log_prob_teacher[i : i + chunk_len],
@@ -144,6 +145,8 @@ def build_hybrid_from_ckpt(
         new_state_dict[key] = value
     new_state_dict["lm_head.weight"] = new_state_dict["model.embed_tokens.weight"]
     missing_keys, unexpected_keys = student_model.load_state_dict(new_state_dict, strict=False)
+    print(f"Missing keys: {missing_keys}")
+    print(f"Unexpected keys: {unexpected_keys}")
     assert len(unexpected_keys) == 0
     for missing_key in missing_keys:
         # Allow adding new parameters to teacher layers

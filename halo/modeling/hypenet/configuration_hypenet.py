@@ -107,6 +107,7 @@ class HypeNetConfig(PretrainedConfig):
         attn_logits_scaling: None | str | float = None,
         attn_use_output_gate: bool = False,
         rand_init: bool = False,
+        rope_parameters: dict = {},
         **kwargs,
     ):
         self.vocab_size = vocab_size
@@ -171,6 +172,7 @@ class HypeNetConfig(PretrainedConfig):
         self.use_cache = use_cache
         self.rope_theta = rope_theta
         self.rope_scaling = rope_scaling
+        self.rope_parameters = rope_parameters
         self.attention_bias = attention_bias
         self.attention_dropout = attention_dropout
         # Validate the correctness of rotary position embeddings parameters
